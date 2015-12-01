@@ -1,17 +1,17 @@
 library(googlesheets)
 
-
+.e <- new.env()
 format_conso <- function(var)
 {
-  switch (var,
-          "Consommation..Javel." = "cJavel",
-          "Consommation..Lave.Linge.Liquide."="cLaveLinge",
-          "Consommation..Poudre.Machine."="cPoudreMachine",
-          "Consommation..Autres.Air.Fresh.Lave.vitre.."="cAutres",
-          "Consommation..Liquide.Vaisselle."="cVaisselle",
-          "Consommation..Poudre.multi.usage."="cPoudreMultiUsage",
-          "Consommation..Désodorisant.Liquide."="Désodorisant",
-          var)
+  if(grepl("Consommation..D",var,fixed=TRUE)) "cDésodorisant"
+  else  switch (var,
+                "Consommation..Javel." = "cJavel",
+                "Consommation..Lave.Linge.Liquide."="cLaveLinge",
+                "Consommation..Poudre.Machine."="cPoudreMachine",
+                "Consommation..Autres.Air.Fresh.Lave.vitre.."="cAutres",
+                "Consommation..Liquide.Vaisselle."="cVaisselle",
+                "Consommation..Poudre.multi.usage."="cPoudreMultiUsage",
+                var)
 
 }
 
@@ -26,25 +26,22 @@ format_conso <- function(var)
 #' @examples
 #' load_survey
 load_survey <-
-  function(){
-    url <- "https://docs.google.com/spreadsheets/d/1FdjLSdg1fkVBI5IT-rfVb-w2ngZGQJXUdZUhb81SlY4/edit#gid=1686733536&vpid=A2"
-    suppressMessages({
-    xx <- gs_url(url)
-    yy <- gs_read(xx)
-    })
+  function(force=FALSE){
 
-    ## yy <- setNames(yy,c("Timestamp","Product","cJavel","cVaisselle","cLinge","cPoudre","cOthers","nbrFamily"))
-    setDT(yy)[,Timestamp:=as.POSIXct(Timestamp,"%d/%m/%Y %H:%M:%S",tz="")]
-    ss <- suppressWarnings(melt(yy,id=1)[!is.na(value)])
+    if(is.null(.e$data) || force).raw_data()
+    yy <- setDT(.e$data)[,Timestamp:=as.POSIXct(Timestamp,"%d/%m/%Y %H:%M:%S",tz="")]
+    ss <- suppressWarnings(melt(yy,id=c("Timestamp","Foyer"))[!is.na(value)])
 
     setkey(ss,Timestamp)
-    ss[,variable := gsub(".*[.]([0-9]+).*","\\1",variable)]
+    ss[,variable := gsub(".*[.]([0-9]+.*)[.]","\\1",variable)]
+    ss[,Foyer:=factor(Foyer,levels=c("1","2-3","3-5",">5"))]
 
 
+    ss[,variable := sapply(variable , format_conso)]
 
-    ss[,variable := lapply(variable , format_conso)]
-
-    ss[]
+    ss[!grep("Poudre",value),Type:="Liquide"]
+    ss[grep("Poudre",value),Type:="Poudre"]
+    ss
   }
 
 #' Load Imports and Exports
@@ -64,3 +61,22 @@ impo_expo <-
     expo.sen <- transform(expo.sen,Value= as.numeric(gsub(",|[$]","",Value)))
     list(impo=imp.sen,expo=expo.sen)
   }
+
+
+
+.raw_data <-
+  function(){
+    url <- "https://docs.google.com/spreadsheets/d/1FdjLSdg1fkVBI5IT-rfVb-w2ngZGQJXUdZUhb81SlY4/edit#gid=1686733536&vpid=A2"
+    suppressMessages({
+      xx <- gs_url(url)
+      yy <- gs_read(xx)
+    })
+    .e$data <- yy
+  }
+
+#' @export
+get_nbr <- function(force=FALSE){
+  if(is.null(.e$data) || force).raw_data()
+  nrow(.e$data)
+}
+

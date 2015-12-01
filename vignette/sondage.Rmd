@@ -1,0 +1,99 @@
+---
+title: "Analyse Résultats Sondage détergent"
+author: "Amine Gassem"
+date: '`r Sys.Date()`'
+output: pdf_document
+---
+```{r,echo=FALSE}
+library(senegal)
+library(ggplot2)
+my_theme <- ggthemes::theme_fivethirtyeight
+rr <- load_survey()
+```
+
+# Introduction
+
+
+Afin de mener l'étude de la demande détergent un sondage a été effectué auprés des ménages au Sénégal. 
+
+Il s'agit d'un sondage numérique que les utilisateurs peuvent y accéder soir sur mobile ou par internet.
+Le sondage peut être consulté sur [ce lien](http://goo.gl/forms/nV50LUL8nK).  
+
+
+# Participants
+
+A ce jour le sondage a été effectué sur une population de **`r get_nbr()` personnes**.
+
+```{r,echo=FALSE}
+ggplot(unique(rr[,list(Foyer,Timestamp)])) +
+  geom_bar(aes(x=Foyer,fill=Foyer)) +
+  ggtitle("Réparatition des participants par taille de foyer\n") +
+  my_theme()
+
+```
+
+
+# Analyse de la demande 
+
+```{r,echo=FALSE}
+
+ggplot(rr[!grepl("^c",variable)]) +  
+  geom_bar(aes(value,fill=Foyer),position="dodge") + 
+  facet_wrap(~Type,scales = "free",nrow=2) +
+  ggtitle("Demande par produit et par taille de foyer\n") +
+  my_theme()
+```
+
+# Liquide
+
+```{r,echo=FALSE}
+ggplot(rr[!grepl("^c",variable) & Type=="Liquide"]) +  
+  geom_bar(aes(x=value,fill=variable),position="dodge") + 
+  ggtitle("Répartition des quantités des produits liquides\n") +
+  my_theme()
+```
+
+```{r,echo=FALSE}
+ggplot(rr[!grepl("^c",variable) & Type=="Liquide"][
+  ,variable :=
+    factor(variable,levels=
+        c("50ML","75ML","250ML","500ML","1L","2L","5L"),ordered = TRUE)
+]) +  
+  geom_bar(aes(x=variable,fill=value),position="dodge") + 
+  facet_wrap(~Type,scales = "free",nrow=2) +
+  ggthemes::theme_fivethirtyeight()
+
+```
+
+
+# Poudre
+
+```{r,echo=FALSE}
+ggplot(rr[!grepl("^c",variable) & Type=="Poudre"]) +  
+  geom_bar(aes(x=value,fill=variable),position="dodge") + 
+  ggtitle("Répartition des quantités des produits poudres\n")  +
+   my_theme()
+```
+
+```{r,echo=FALSE}
+ggplot(rr[!grepl("^c",variable) & Type=="Poudre"]) +  
+  geom_bar(aes(x=variable,fill=value),position="dodge") + 
+    my_theme()
+```
+
+# Consommation
+
+```{r,echo=FALSE}
+ggplot(rr[grepl("^c.*",variable)][,value:=factor(value,levels=c("1","2","3",">3"))])+
+  geom_bar(aes(x=value,fill=Foyer),
+  position="dodge") +
+  facet_wrap(~variable,scales="free_y") +
+  my_theme()
+
+```
+
+
+
+
+
+

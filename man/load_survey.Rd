@@ -4,7 +4,7 @@
 \alias{load_survey}
 \title{Extract survey raw data}
 \usage{
-load_survey()
+load_survey(force = FALSE)
 }
 \value{
 data.frame
