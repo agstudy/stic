@@ -1,10 +1,12 @@
 Package: senegal
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Senegal
 Version: 0.1
 Date: 2015-11-11
 Author: Amine Gassem<contact@ag-study.com>
 Maintainer: Amine Gassem<contact@ag-study.com>
-Description: More about what it does (maybe more than one line)
+Description: Study bout senegal population
 License: MIT
-Imports: jsonlite,googlesheets,httr,XML,data.table
+Imports:
+    jsonlite,googlesheets,httr,XML,data.table,rCharts,leaflet,XLConnect,geosphere
+RoxygenNote: 5.0.1
