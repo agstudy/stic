@@ -1,60 +1,32 @@
 
-#' @import XLConnect
+#' Create dakar map with population
+#'
+#' @import data.table
 #' @export
 create_map <-
   function(){
     map.path <- system.file(package = "senegal","maps","senegal4.rds")
-    map.data <- readRDS(map.path)
-    dakar.map <- map.data[map.data$NAME_1=="Dakar",]
-
-    ## compute area in km
-    areas <- sapply(dakar.map@polygons,
-                    function(com)
-                      sum(sapply(com@Polygons,
-                                 function(x)areaPolygon(x@coords))))
-
-    dakar.map$area <- areas
+    dakar.map <- readRDS(map.path)
+    dakar.map <- dakar.map[dakar.map$NAME_1=="Dakar",]
+    map.data <- setkey(setDT(dakar.map@data)[,pop:=tolower(NAME_4)],pop)
 
 
-    pop.path <- system.file(package = "senegal","pop","Population_Commune_RGPHAE_2013.xlsx")
-    wb <- loadWorkbook(pop.path)
-    pop.data <- readWorksheet(wb, sheet = 1)
+    pop.path <- system.file(package = "senegal","pop","pop.csv")
+    pop.data <- fread(pop.path)[,pop:=tolower(Commune)]
 
-    function(x)
-      switch (x,
-              "ngor" = iconv("n’gor","UTF-8","UTF-8"),
-              x
-      )
-
-    pop.coms <- tolower(pop.data$Commune)
-    pop.coms[grep('n.gor',pop.coms)] <- "ngor"
-    pop.coms <- gsub('m.bao','mbao',pop.coms)
-    pop.coms[pop.coms=="rufisque est"] <- "rufisque  est"
-    pop.coms[pop.coms=="colobanefassgueule tapee"] <- "gueule tapeecolobanefass"
-
-
-    dakar.coms <- tolower(dakar.map$NAME_4)
-    dakar.coms <- gsub('m.bao','mbao',dakar.coms)
-
-    pop.coms <- gsub('[/]','',pop.coms)
-    dakar.coms <- gsub('[/]','',dakar.coms)
-    mapping <- sapply(dakar.coms[!dakar.coms %in% pop.coms],
-                      function(x){
-                        vals <- agrep(x,pop.coms,value=TRUE)
-                        if (length(vals)==0)"NOT FOUND"
-                        else if(length(vals)==1)vals
-                      })
-
-
-    dat1 <- data.frame(map=names(mapping),pop=mapping)
-    dat2 <- data.frame(map=dakar.coms[dakar.coms %in% pop.coms],pop=dakar.coms[dakar.coms %in% pop.coms])
-    dat <- rbind(dat1,dat2)
-    pop.data$Commune <- pop.coms
-    pop.dat.all <- merge(dat,pop.data,by.x="pop",by.y="Commune")
-    dakar.map$NAME_4 <- tolower(dakar.map$NAME_4)
-    dd <- merge(pop.dat.all,dakar.map,by.x="pop",by.y="NAME_4",all.y=TRUE)
-
-    slot(dakar.map,"data") <- dd
+    ## special cities with no default mapping
+    pop.data[grep("rufisque est",pop),pop:="rufisque  est"]
+    pop.data[grep("tapee",pop),pop:=map.data[grep("tapee",pop),pop]]
+    pop.data[grep("bao",pop),pop:=map.data[grep("bao",pop),pop]]
+    pop.data[grep("gor$",pop),pop:=map.data[grep("gor$",pop),pop]]
+    pop.data[grep("b.*lor$",pop),pop:=map.data[grep("b.*lor$",pop),pop]]
+    pop.data[grep("aire",pop),pop:=map.data[grep("aire",pop),pop]]
+    pop.data[grep("th.*mer",pop),pop:=map.data[grep("th.*mer",pop),pop]]
+    pop.data[grep("oie",pop),pop:=map.data[grep("oie",pop),pop]]
+    pop.data[grep("lima",pop),pop:=map.data[grep("lima",pop),pop]]
+    setkey(pop.data,pop)
+    ## merge
+    slot(dakar.map,"data") <- setkey(pop.data[map.data],OBJECTID)
     saveRDS(dakar.map,"inst/maps/dakar_map.rds")
   }
 
@@ -99,7 +71,7 @@ pop_map <- function(dakar.map){
 
   }
 
-  qpal <- colorBin("Reds", c(0,max(dakar.map$area,na.rm=TRUE)),bins =10)
+  qpal <- colorBin("Reds", c(0,max(dakar.map$Total,na.rm=TRUE)),bins =10)
   url_tile <-
     "http://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}"
   map <- leaflet(dakar.map) %>%
