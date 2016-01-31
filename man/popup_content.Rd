@@ -4,12 +4,16 @@
 \alias{popup_content}
 \title{Create popup content}
 \usage{
-popup_content(region, nbr)
+popup_content(commune, nbr, depart, arrond)
 }
 \arguments{
-\item{region}{character}
+\item{commune}{character}
 
 \item{nbr}{numeric popluation}
+
+\item{depart}{character}
+
+\item{arrond}{character}
 }
 \value{
 character popup content

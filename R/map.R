@@ -37,21 +37,25 @@ format_nbr <-
 
 #' Create popup content
 #'
-#' @param region character
+#' @param commune character
+#' @param depart character
+#' @param arrond character
 #' @param nbr numeric popluation
 #'
 #' @return character popup content
 #' @export
 
 popup_content <-
-  function(region,nbr){
+  function(commune,nbr,depart,arrond){
     paste0(
-      "<b>",region,"</b><br/>",
-      "<b>",format_nbr(nbr)," Personnes </b>"
+      "<b>Departement:</b>",depart,"<br/>",
+      "<b>Arrondissment:</b>",arrond,"<br/>",
+      "<b>Commune:</b>",commune,"<br/>",
+      "<b>Popoulation:</b>",format_nbr(nbr)," Personnes"
     )
   }
 create_pop <- function(dat){
-  popup_content(dat$pop,dat$Total)
+  popup_content(dat$pop,dat$Total,dat$NAME_2,dat$NAME_3)
 
 }
 

@@ -22,7 +22,9 @@ shinyServer(function(input, output) {
 
 
   showCountryPopup <- function(country, lat, lng) {
-    content = popup_content(country ,dakar.map[dakar.map$pop==country,]$Total)
+
+    vals <- dakar.map@data[dakar.map$pop==country,c("Total","NAME_2","NAME_3")]
+    content = popup_content(country ,vals$Total,vals$NAME_2,vals$NAME_3)
     leafletProxy("dakarmap") %>% addPopups(lng, lat, content, layerId = country)
   }
 
