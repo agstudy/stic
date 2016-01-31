@@ -40,7 +40,7 @@ shinyServer(function(input, output) {
 
   observe({
     leafletProxy("dakarmap") %>% clearPopups()
-    event <- input$dakarmap_shape_click
+    event <- input$dakarmap_shape_mouseover
     if (is.null(event))
       return()
 
