@@ -31,7 +31,7 @@ shinyServer(function(input, output) {
   observe({
     if(!is.null(vals$country))
       output[["investChart"]] <-
-        renderChart(pop_chart(dakar.map,vals$country,id="investChart"))
+        renderChart2(pop_chart(dakar.map,vals$country,id="investChart"))
   })
 
 
